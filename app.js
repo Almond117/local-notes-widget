@@ -829,20 +829,28 @@
 
   elements.addCategoryButton.addEventListener("click", () => {
     elements.categoryNameInput.value = "";
+    // 新分类默认继承当前便签的皮肤色，保证分类标签与便签面板颜色一致。
+    const inheritedColor = selectedCategory()?.color || state.skinColor || "#89b6ef";
+    const matchingColor = [...elements.categoryForm.querySelectorAll("input[name='color']")]
+      .find((input) => input.value.toLowerCase() === inheritedColor.toLowerCase());
+    if (matchingColor) matchingColor.checked = true;
     elements.categoryDialog.showModal();
     requestAnimationFrame(() => elements.categoryNameInput.focus());
   });
 
   elements.categoryForm.addEventListener("submit", (event) => {
     const submitterValue = event.submitter?.value;
-    if (submitterValue === "cancel") return;
     event.preventDefault();
+    if (submitterValue === "cancel") {
+      elements.categoryDialog.close("cancel");
+      return;
+    }
     const name = elements.categoryNameInput.value.trim();
     if (!name) {
       elements.categoryNameInput.focus();
       return;
     }
-    const color = new FormData(elements.categoryForm).get("color") || "#89b6ef";
+    const color = new FormData(elements.categoryForm).get("color") || selectedCategory()?.color || state.skinColor || "#89b6ef";
     const category = { id: uid("category"), name: name.slice(0, 12), color };
     state.categories.push(category);
     state.selectedCategoryId = category.id;
