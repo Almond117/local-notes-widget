@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5cbd9" />
+    <title>本地便签</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <nav class="category-rail" aria-label="便签分类">
+        <div id="categoryList" class="category-list"></div>
+        <button id="addCategoryButton" class="category-add" type="button" aria-label="新增分类">
+          <span>＋</span>
+        </button>
+      </nav>
+
+      <section class="note-board" aria-label="便签清单">
+        <header class="board-header">
+          <button id="allTasksButton" class="all-tasks-button" type="button">
+            <span class="folder-icon" aria-hidden="true"></span>
+            <span id="currentCategoryName">全部</span>
+            <span id="activeCount" class="task-count">0</span>
+          </button>
+          <div class="desktop-toolbar" aria-label="窗口工具栏">
+            <div class="drag-region" aria-hidden="true"></div>
+            <button id="searchButton" class="toolbar-button search-symbol" type="button" aria-label="搜索"></button>
+            <button id="openComposerButton" class="toolbar-button add-symbol" type="button" aria-label="新增便签">＋</button>
+            <button id="pinButton" class="toolbar-button pin-symbol" type="button" aria-label="钉在所有软件之上" title="钉在所有软件之上" aria-pressed="false"><span class="pushpin-icon" aria-hidden="true"></span></button>
+            <button id="themeButton" class="toolbar-button theme-symbol" type="button" aria-label="皮肤设置" aria-expanded="false"><span class="shirt-icon" aria-hidden="true"></span></button>
+            <button id="minimizeButton" class="toolbar-button window-symbol" type="button" aria-label="最小化">—</button>
+            <button id="appMenuButton" class="toolbar-button menu-symbol" type="button" aria-label="应用菜单">☰</button>
+            <button id="closeButton" class="toolbar-button close-symbol" type="button" aria-label="隐藏到系统托盘" title="隐藏到系统托盘">×</button>
+          </div>
+        </header>
+
+        <form id="searchPanel" class="search-panel" hidden>
+          <span class="search-field-icon" aria-hidden="true"></span>
+          <label class="sr-only" for="searchInput">搜索便签</label>
+          <input id="searchInput" type="search" autocomplete="off" placeholder="搜索全部便签…" />
+          <span id="searchResultCount" class="search-result-count"></span>
+          <button id="closeSearchButton" type="button" aria-label="关闭搜索">×</button>
+        </form>
+
+        <form id="composer" class="composer" hidden>
+          <label class="sr-only" for="taskInput">便签内容</label>
+          <textarea id="taskInput" maxlength="120" rows="2" placeholder="写下一件要做的事…"></textarea>
+          <label class="reminder-field" for="newTaskReminderInput">
+            <span aria-hidden="true">◷</span>
+            <span>提醒</span>
+            <input id="newTaskReminderInput" type="datetime-local" />
+          </label>
+          <div class="composer-actions">
+            <span id="composerCategory" class="composer-category"></span>
+            <button id="cancelComposerButton" class="text-button" type="button">取消</button>
+            <button class="primary-button" type="submit">添加</button>
+          </div>
+        </form>
+
+        <div class="task-scroll-area">
+          <ul id="activeTaskList" class="task-list" aria-label="未完成便签"></ul>
+
+          <section class="completed-section">
+            <button id="completedToggle" class="completed-toggle" type="button" aria-expanded="true">
+              <span class="checked-box" aria-hidden="true">✓</span>
+              <span>已完成 / 已放弃</span>
+              <span id="completedCount" class="task-count">0</span>
+              <span class="chevron" aria-hidden="true"></span>
+            </button>
+            <ul id="completedTaskList" class="task-list completed-list" aria-label="已完成便签"></ul>
+          </section>
+
+          <div id="emptyState" class="empty-state" hidden>
+            <div class="empty-doodle" aria-hidden="true">✦</div>
+            <p>这里很安静</p>
+            <span>点右上角的 ＋ 写一条便签</span>
+          </div>
+        </div>
+
+        <footer id="categoryFooter" class="category-footer">全部</footer>
+
+        <div class="resize-mark" aria-hidden="true"></div>
+      </section>
+    </main>
+
+    <div id="menu" class="task-menu" hidden>
+      <button data-action="edit" type="button">编辑</button>
+      <button data-action="reminder" type="button">设置提醒</button>
+      <button data-action="move" type="button">更换分类</button>
+      <button data-action="delete" class="danger" type="button">删除</button>
+    </div>
+
+    <div id="appMenu" class="task-menu app-menu" hidden>
+      <button data-app-action="new" type="button"><span>⊕</span> 新增便签</button>
+      <button data-app-action="categories" type="button"><span>▤</span> 分类管理</button>
+      <button data-app-action="recycle" type="button"><span>♲</span> 回收站 <b id="recycleCount" class="menu-badge">0</b></button>
+      <button id="autoLaunchMenuItem" data-app-action="auto-launch" type="button"><span>○</span> 开机启动</button>
+      <button data-app-action="export" type="button"><span>⇧</span> 导出备份</button>
+      <button data-app-action="import" type="button"><span>⇩</span> 导入备份</button>
+      <button data-app-action="reset" class="danger" type="button"><span>↺</span> 恢复初始内容</button>
+      <button data-app-action="quit" class="danger" type="button"><span>×</span> 退出程序</button>
+    </div>
+
+    <section id="skinPopover" class="skin-popover" aria-label="皮肤设置" hidden>
+      <div class="skin-grid" aria-label="预设颜色">
+        <button class="skin-swatch" data-skin-color="#f78eb8" style="--skin: #f78eb8" aria-label="樱花粉"></button>
+        <button class="skin-swatch" data-skin-color="#a8e84f" style="--skin: #a8e84f" aria-label="青柠绿"></button>
+        <button class="skin-swatch" data-skin-color="#ffdf55" style="--skin: #ffdf55" aria-label="明亮黄"></button>
+        <button class="skin-swatch" data-skin-color="#ffe5a3" style="--skin: #ffe5a3" aria-label="奶油黄"></button>
+        <button class="skin-swatch" data-skin-color="#b7a8f7" style="--skin: #b7a8f7" aria-label="薰衣草紫"></button>
+        <button class="skin-swatch" data-skin-color="#a9eca7" style="--skin: #a9eca7" aria-label="薄荷绿"></button>
+        <button class="skin-swatch" data-skin-color="#85b9f1" style="--skin: #85b9f1" aria-label="晴空蓝"></button>
+        <button class="skin-swatch" data-skin-color="#c8c8c8" style="--skin: #c8c8c8" aria-label="浅灰"></button>
+        <button class="skin-swatch" data-skin-color="#bdcaef" style="--skin: #bdcaef" aria-label="雾霾蓝"></button>
+        <button class="skin-swatch" data-skin-color="#f5c696" style="--skin: #f5c696" aria-label="蜜桃橙"></button>
+        <button class="skin-swatch" data-skin-color="#bde6e7" style="--skin: #bde6e7" aria-label="冰川青"></button>
+        <button class="skin-swatch" data-skin-color="#f1d4d2" style="--skin: #f1d4d2" aria-label="柔雾粉"></button>
+        <button class="skin-swatch" data-skin-color="#efb2ef" style="--skin: #efb2ef" aria-label="梦幻紫"></button>
+        <button class="skin-swatch" data-skin-color="#efa7a7" style="--skin: #efa7a7" aria-label="珊瑚红"></button>
+        <button class="skin-swatch" data-skin-color="#e7d9c5" style="--skin: #e7d9c5" aria-label="暖米色"></button>
+        <button class="skin-swatch" data-skin-color="#e6e495" style="--skin: #e6e495" aria-label="浅橄榄"></button>
+        <button class="skin-swatch" data-skin-color="#f29b68" style="--skin: #f29b68" aria-label="杏橙"></button>
+        <button class="skin-swatch" data-skin-color="#e76f91" style="--skin: #e76f91" aria-label="莓果红"></button>
+        <button class="skin-swatch" data-skin-color="#d6a4e8" style="--skin: #d6a4e8" aria-label="葡萄紫"></button>
+        <button class="skin-swatch" data-skin-color="#78c7b5" style="--skin: #78c7b5" aria-label="海盐青"></button>
+        <button class="skin-swatch" data-skin-color="#4f9fbe" style="--skin: #4f9fbe" aria-label="湖水蓝"></button>
+        <button class="skin-swatch" data-skin-color="#6e83c9" style="--skin: #6e83c9" aria-label="靛青蓝"></button>
+        <button class="skin-swatch" data-skin-color="#c6b67a" style="--skin: #c6b67a" aria-label="沙丘棕"></button>
+        <button class="skin-swatch" data-skin-color="#9a9fa8" style="--skin: #9a9fa8" aria-label="石墨灰"></button>
+      </div>
+      <div class="custom-skin-row">
+        <label class="custom-color-label">
+          <span class="rainbow-dot" aria-hidden="true"></span>
+          <span>自定义</span>
+          <input id="customColorInput" type="color" value="#89b6ef" aria-label="选择自定义颜色" />
+        </label>
+        <button class="skin-swatch dark-swatch" data-skin-color="#161616" style="--skin: #161616" aria-label="黑色"></button>
+        <button id="followCategoryButton" class="follow-category-button" type="button">跟随分类</button>
+      </div>
+      <div class="skin-divider"></div>
+      <label class="opacity-row" for="opacityRange">
+        <span>透明度：</span>
+        <input id="opacityRange" type="range" min="25" max="100" step="1" value="86" />
+        <output id="opacityValue" for="opacityRange">86%</output>
+      </label>
+    </section>
+
+    <dialog id="categoryDialog" class="dialog-card">
+      <form id="categoryForm" method="dialog">
+        <div class="dialog-heading">
+          <h2>新增分类</h2>
+          <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        </div>
+        <label for="categoryNameInput">分类名称</label>
+        <input id="categoryNameInput" maxlength="12" autocomplete="off" placeholder="例如：灵感" />
+        <div class="color-picker" aria-label="选择分类颜色">
+          <label><input type="radio" name="color" value="#f58bb1" checked /><span style="--swatch: #f58bb1"></span></label>
+          <label><input type="radio" name="color" value="#f4cf65" /><span style="--swatch: #f4cf65"></span></label>
+          <label><input type="radio" name="color" value="#92dc4c" /><span style="--swatch: #92dc4c"></span></label>
+          <label><input type="radio" name="color" value="#76d8dc" /><span style="--swatch: #76d8dc"></span></label>
+          <label><input type="radio" name="color" value="#a9a0f3" /><span style="--swatch: #a9a0f3"></span></label>
+          <label><input type="radio" name="color" value="#ec8c82" /><span style="--swatch: #ec8c82"></span></label>
+          <label><input type="radio" name="color" value="#f29b68" /><span style="--swatch: #f29b68"></span></label>
+          <label><input type="radio" name="color" value="#d6a4e8" /><span style="--swatch: #d6a4e8"></span></label>
+          <label><input type="radio" name="color" value="#78c7b5" /><span style="--swatch: #78c7b5"></span></label>
+          <label><input type="radio" name="color" value="#4f9fbe" /><span style="--swatch: #4f9fbe"></span></label>
+          <label><input type="radio" name="color" value="#6e83c9" /><span style="--swatch: #6e83c9"></span></label>
+          <label><input type="radio" name="color" value="#9a9fa8" /><span style="--swatch: #9a9fa8"></span></label>
+        </div>
+        <menu>
+          <button value="cancel" class="text-button">取消</button>
+          <button id="saveCategoryButton" value="default" class="primary-button">保存</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="reminderDialog" class="dialog-card">
+      <form id="reminderForm" method="dialog">
+        <div class="dialog-heading">
+          <h2>设置提醒</h2>
+          <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        </div>
+        <label for="reminderDateInput">提醒时间</label>
+        <input id="reminderDateInput" type="datetime-local" />
+        <menu>
+          <button id="clearReminderButton" value="clear" class="text-button danger-text">清除提醒</button>
+          <button value="cancel" class="text-button">取消</button>
+          <button value="save" class="primary-button">保存</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="categoryManagerDialog" class="dialog-card manager-dialog">
+      <div class="dialog-body">
+        <div class="dialog-heading">
+          <h2>分类管理</h2>
+          <button id="closeCategoryManagerButton" class="dialog-close" type="button" aria-label="关闭">×</button>
+        </div>
+        <div id="categoryManagerList" class="manager-list"></div>
+        <p class="dialog-tip">名称和颜色会自动保存；删除分类时，其中的便签将移到 other。</p>
+      </div>
+    </dialog>
+
+    <dialog id="recycleDialog" class="dialog-card manager-dialog">
+      <div class="dialog-body">
+        <div class="dialog-heading">
+          <h2>回收站</h2>
+          <button id="closeRecycleButton" class="dialog-close" type="button" aria-label="关闭">×</button>
+        </div>
+        <div id="recycleList" class="recycle-list"></div>
+        <div class="dialog-footer-row">
+          <span>删除的便签保留在本机</span>
+          <button id="emptyRecycleButton" class="text-button danger-text" type="button">清空回收站</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite">
+      <span id="toastMessage"></span>
+      <button id="toastAction" type="button" hidden></button>
+    </div>
+    <script src="./app.js"></script>
+  </body>
+</html>

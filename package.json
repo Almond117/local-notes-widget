@@ -1,0 +1,48 @@
+{
+  "name": "local-notes-widget",
+  "version": "1.3.0",
+  "description": "一个轻量、离线的 Windows 桌面便签应用",
+  "main": "main.js",
+  "author": "Local Notes",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
+    "start": "electron .",
+    "check": "node --check main.js && node --check preload.js && node --check app.js",
+    "pack": "electron-builder --win portable --x64"
+  },
+  "devDependencies": {
+    "electron": "44.0.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.localnotes.widget",
+    "productName": "本地便签",
+    "asar": true,
+    "disableAsarIntegrity": true,
+    "executableName": "LocalNotes",
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "signExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "本地便签-${version}-${arch}.${ext}"
+    }
+  }
+}
