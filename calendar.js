@@ -6,6 +6,8 @@ const grid = document.querySelector("#calendarGrid");
 const summary = document.querySelector("#taskSummary");
 let cursor = new Date();
 let tasks = [];
+let state = null;
+let selectedKey = dateKey(new Date());
 
 function escapeHtml(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -21,6 +23,15 @@ function taskDate(task) {
   return dateKey(task.reminderAt || task.createdAt);
 }
 
+function formatKey(key) {
+  const [year, month, day] = key.split("-");
+  return `${year}年${Number(month)}月${Number(day)}日`;
+}
+
+function categoryColor(task) {
+  return state?.categories?.find((category) => category.id === task.categoryId)?.color || "#8bbcec";
+}
+
 function render() {
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -31,7 +42,7 @@ function render() {
   const total = Math.ceil((leading + days) / 7) * 7;
   const today = dateKey(new Date());
   const byDate = new Map();
-  tasks.filter((task) => !task.completedAt).forEach((task) => {
+  tasks.forEach((task) => {
     const key = taskDate(task);
     if (!key) return;
     if (!byDate.has(key)) byDate.set(key, []);
@@ -46,14 +57,30 @@ function render() {
     if (!inMonth) return `<div class="day-cell outside" aria-hidden="true"></div>`;
     const key = `${monthPrefix}-${String(day).padStart(2, "0")}`;
     const dayTasks = byDate.get(key) || [];
-    const taskMarkup = dayTasks.slice(0, 4).map((task) => `<div class="calendar-task" title="${escapeHtml(task.title)}">${escapeHtml(task.title)}</div>`).join("");
+    const taskMarkup = dayTasks.slice(0, 4).map((task) => `<div class="calendar-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}" title="${escapeHtml(task.title)}">${escapeHtml(task.title)}</div>`).join("");
     const more = dayTasks.length > 4 ? `<div class="more-tasks">还有 ${dayTasks.length - 4} 项</div>` : "";
     return `<article class="day-cell${key === today ? " today" : ""}"><div class="day-number">${day}</div><div class="day-tasks">${taskMarkup}${more}</div></article>`;
   }).join("");
+  grid.querySelectorAll(".day-cell:not(.outside)").forEach((cell) => cell.addEventListener("click", () => {
+    const day = Number(cell.querySelector(".day-number").textContent);
+    selectedKey = `${monthPrefix}-${String(day).padStart(2, "0")}`;
+    renderDetail();
+  }));
+}
+
+function renderDetail() {
+  const detail = document.querySelector("#dayDetail");
+  const list = document.querySelector("#detailTasks");
+  const dayTasks = tasks.filter((task) => taskDate(task) === selectedKey);
+  document.querySelector("#detailDate").textContent = formatKey(selectedKey);
+  document.querySelector("#detailSummary").textContent = `${dayTasks.filter((task) => !task.completedAt).length} 项待完成 · ${dayTasks.filter((task) => task.completedAt).length} 项已完成`;
+  list.innerHTML = dayTasks.length ? dayTasks.map((task) => `<div class="detail-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}"><span class="detail-status">${task.completedAt ? "✓" : "○"}</span><span>${escapeHtml(task.title)}</span></div>`).join("") : `<div class="detail-empty">这一天还没有安排</div>`;
+  detail.hidden = false;
 }
 
 async function load() {
   const saved = await window.desktopAPI?.loadState();
+  state = saved || { tasks: [], categories: [] };
   if (saved?.tasks) tasks = saved.tasks;
   else {
     try { tasks = JSON.parse(localStorage.getItem(STORAGE_KEY))?.tasks || []; } catch { tasks = []; }
@@ -65,4 +92,23 @@ document.querySelector("#previousMonth").addEventListener("click", () => { curso
 document.querySelector("#nextMonth").addEventListener("click", () => { cursor.setMonth(cursor.getMonth() + 1); render(); });
 document.querySelector("#todayButton").addEventListener("click", () => { cursor = new Date(); render(); });
 document.querySelector("#closeCalendar").addEventListener("click", () => window.desktopAPI?.closeCalendar());
+document.querySelector("#closeDetail").addEventListener("click", () => { document.querySelector("#dayDetail").hidden = true; });
+document.querySelector("#detailForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = document.querySelector("#detailInput");
+  const title = input.value.trim();
+  if (!title || !state) return;
+  const completed = event.submitter?.dataset.completed === "true";
+  const [year, month, day] = selectedKey.split("-").map(Number);
+  const createdAt = new Date(year, month - 1, day, 12, 0, 0).toISOString();
+  const categoryId = state.categories?.find((category) => category.id === state.selectedCategoryId)?.id || state.categories?.[0]?.id || "other";
+  const task = { id: `task-calendar-${Date.now()}-${Math.random().toString(16).slice(2)}`, title, categoryId, createdAt };
+  if (completed) task.completedAt = new Date().toISOString();
+  state.tasks = Array.isArray(state.tasks) ? [...state.tasks, task] : [task];
+  tasks = state.tasks;
+  await window.desktopAPI?.saveState(state);
+  input.value = "";
+  render();
+  renderDetail();
+});
 load();
