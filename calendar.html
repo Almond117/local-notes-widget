@@ -48,13 +48,9 @@
         <div class="calendar-grid" aria-label="月历"><div id="calendarGrid" class="calendar-grid-inner"></div></div>
         <section id="dayDetail" class="day-detail" hidden>
           <div class="detail-heading">
-            <div>
-              <h2 id="detailDate"></h2>
-              <span id="detailSummary"></span>
-            </div>
+            <h2 id="detailDate">添加任务</h2>
             <button id="closeDetail" type="button" aria-label="关闭每日详情">×</button>
           </div>
-          <div id="detailTasks" class="detail-tasks"></div>
           <form id="detailForm" class="detail-form">
             <input id="detailInput" type="text" maxlength="120" placeholder="添加当天要做的事…" autocomplete="off" />
             <select id="detailDirection" aria-label="事项方向"><option value="工作">工作</option><option value="创业">创业</option><option value="学习">学习</option></select>
@@ -65,10 +61,9 @@
         </section>
       </section>
       <aside class="add-panel">
-        <div class="add-panel-heading"><h2>添加任务</h2><button id="sideAddButton" type="button" aria-label="添加任务">＋</button></div>
-        <div id="sideDate" class="side-date"></div>
+        <div class="add-panel-heading"><h2>任务看板</h2><span id="boardDate" class="side-date"></span></div>
         <div class="side-rule"></div>
-        <p>点击右上角“＋”添加当天任务</p>
+        <div id="boardTasks" class="board-tasks"></div>
       </aside>
     </main>
     <script src="./calendar.js"></script>
