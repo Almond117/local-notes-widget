@@ -29,6 +29,21 @@
           <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
         </div>
         <div id="calendarGrid" class="calendar-grid" aria-label="月历"></div>
+        <section id="dayDetail" class="day-detail" hidden>
+          <div class="detail-heading">
+            <div>
+              <h2 id="detailDate"></h2>
+              <span id="detailSummary"></span>
+            </div>
+            <button id="closeDetail" type="button" aria-label="关闭每日详情">×</button>
+          </div>
+          <div id="detailTasks" class="detail-tasks"></div>
+          <form id="detailForm" class="detail-form">
+            <input id="detailInput" type="text" maxlength="120" placeholder="添加当天要做的事…" autocomplete="off" />
+            <button type="submit" data-completed="false">待完成</button>
+            <button type="submit" data-completed="true" class="completed-action">已完成</button>
+          </form>
+        </section>
       </section>
     </main>
     <script src="./calendar.js"></script>
