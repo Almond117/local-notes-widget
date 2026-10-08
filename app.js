@@ -727,6 +727,10 @@
       renderCategoryManager();
       elements.categoryManagerDialog.showModal();
     }
+    if (action === "calendar") {
+      if (window.desktopAPI?.openCalendar) window.desktopAPI.openCalendar();
+      else showToast("请在桌面版中打开日历");
+    }
     if (action === "recycle") {
       renderRecycleBin();
       elements.recycleDialog.showModal();
