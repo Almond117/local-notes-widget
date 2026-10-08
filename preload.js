@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld("desktopAPI", {
   quit: () => ipcRenderer.invoke("app:quit"),
   getPinned: () => ipcRenderer.invoke("window:get-pinned"),
   togglePinned: () => ipcRenderer.invoke("window:toggle-pinned"),
+  openCalendar: () => ipcRenderer.invoke("calendar:open"),
+  closeCalendar: () => ipcRenderer.invoke("calendar:close"),
   getAutoLaunch: () => ipcRenderer.invoke("app:get-auto-launch"),
   toggleAutoLaunch: () => ipcRenderer.invoke("app:toggle-auto-launch"),
   loadState: () => ipcRenderer.invoke("store:load"),
