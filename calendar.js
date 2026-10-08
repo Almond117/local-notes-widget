@@ -8,6 +8,7 @@ let cursor = new Date();
 let tasks = [];
 let state = null;
 let selectedKey = dateKey(new Date());
+let activeDirection = "all";
 
 function escapeHtml(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
@@ -29,7 +30,12 @@ function formatKey(key) {
 }
 
 function categoryColor(task) {
-  return state?.categories?.find((category) => category.id === task.categoryId)?.color || "#8bbcec";
+  const directionColors = { 工作: "#85b9f1", 创业: "#f78eb8", 学习: "#ffdf55" };
+  return directionColors[task.direction] || state?.categories?.find((category) => category.id === task.categoryId)?.color || "#8bbcec";
+}
+
+function matchesDirection(task) {
+  return activeDirection === "all" || (task.direction || "工作") === activeDirection;
 }
 
 function render() {
@@ -42,7 +48,7 @@ function render() {
   const total = Math.ceil((leading + days) / 7) * 7;
   const today = dateKey(new Date());
   const byDate = new Map();
-  tasks.forEach((task) => {
+  tasks.filter(matchesDirection).forEach((task) => {
     const key = taskDate(task);
     if (!key) return;
     if (!byDate.has(key)) byDate.set(key, []);
@@ -66,12 +72,28 @@ function render() {
     selectedKey = `${monthPrefix}-${String(day).padStart(2, "0")}`;
     renderDetail();
   }));
+  renderTodayPanel();
+}
+
+function renderTodayPanel() {
+  const todayKey = dateKey(new Date());
+  const todayTasks = tasks.filter((task) => taskDate(task) === todayKey && matchesDirection(task));
+  document.querySelector("#todayDate").textContent = formatKey(todayKey);
+  const done = todayTasks.filter((task) => task.completedAt).length;
+  document.querySelector("#todayProgress").style.width = todayTasks.length ? `${Math.round(done / todayTasks.length * 100)}%` : "0%";
+  document.querySelector("#todayTasks").innerHTML = todayTasks.length ? todayTasks.map((task) => `<div class="today-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}"><span class="status">${task.completedAt ? "✓" : "□"}</span><span>${escapeHtml(task.title)}</span></div>`).join("") : `<div class="detail-empty">今天还没有安排</div>`;
+  const summary = document.querySelector("#directionSummary");
+  summary.innerHTML = ["工作", "创业", "学习"].map((direction) => {
+    const count = tasks.filter((task) => (task.direction || "工作") === direction && !task.completedAt && taskDate(task) === todayKey).length;
+    const color = categoryColor({ direction });
+    return `<div class="summary-row" style="--task-color:${color}"><span><i></i>${direction}</span><strong>${count}</strong></div>`;
+  }).join("");
 }
 
 function renderDetail() {
   const detail = document.querySelector("#dayDetail");
   const list = document.querySelector("#detailTasks");
-  const dayTasks = tasks.filter((task) => taskDate(task) === selectedKey);
+  const dayTasks = tasks.filter((task) => taskDate(task) === selectedKey && matchesDirection(task));
   document.querySelector("#detailDate").textContent = formatKey(selectedKey);
   document.querySelector("#detailSummary").textContent = `${dayTasks.filter((task) => !task.completedAt).length} 项待完成 · ${dayTasks.filter((task) => task.completedAt).length} 项已完成`;
   list.innerHTML = dayTasks.length ? dayTasks.map((task) => `<div class="detail-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}"><span class="detail-status">${task.completedAt ? "✓" : "○"}</span><span>${escapeHtml(task.title)}</span></div>`).join("") : `<div class="detail-empty">这一天还没有安排</div>`;
@@ -102,7 +124,8 @@ document.querySelector("#detailForm").addEventListener("submit", async (event) =
   const [year, month, day] = selectedKey.split("-").map(Number);
   const createdAt = new Date(year, month - 1, day, 12, 0, 0).toISOString();
   const categoryId = state.categories?.find((category) => category.id === state.selectedCategoryId)?.id || state.categories?.[0]?.id || "other";
-  const task = { id: `task-calendar-${Date.now()}-${Math.random().toString(16).slice(2)}`, title, categoryId, createdAt };
+  const direction = document.querySelector("#detailDirection").value;
+  const task = { id: `task-calendar-${Date.now()}-${Math.random().toString(16).slice(2)}`, title, direction, categoryId, createdAt };
   if (completed) task.completedAt = new Date().toISOString();
   state.tasks = Array.isArray(state.tasks) ? [...state.tasks, task] : [task];
   tasks = state.tasks;
@@ -112,3 +135,15 @@ document.querySelector("#detailForm").addEventListener("submit", async (event) =
   renderDetail();
 });
 load();
+
+document.querySelectorAll(".direction-filter").forEach((button) => button.addEventListener("click", () => {
+  activeDirection = button.dataset.direction;
+  document.querySelectorAll(".direction-filter").forEach((item) => item.classList.toggle("active", item === button));
+  render();
+  if (!document.querySelector("#dayDetail").hidden) renderDetail();
+}));
+document.querySelector("#todayAddButton").addEventListener("click", () => {
+  selectedKey = dateKey(new Date());
+  renderDetail();
+  document.querySelector("#detailInput").focus();
+});
