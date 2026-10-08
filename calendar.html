@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>本地便签 · 月历</title>
+    <link rel="stylesheet" href="./calendar.css" />
+  </head>
+  <body>
+    <main class="calendar-window">
+      <header class="calendar-header">
+        <div class="calendar-drag-region"></div>
+        <span class="calendar-mark">▦</span>
+        <strong>月历</strong>
+        <span id="taskSummary" class="task-summary"></span>
+        <div class="calendar-actions">
+          <button id="todayButton" type="button">今天</button>
+          <button id="previousMonth" type="button" aria-label="上个月">‹</button>
+          <button id="nextMonth" type="button" aria-label="下个月">›</button>
+          <button id="closeCalendar" class="close-button" type="button" aria-label="关闭日历">×</button>
+        </div>
+      </header>
+      <section class="calendar-content">
+        <div class="month-heading">
+          <h1 id="monthLabel"></h1>
+          <span>按提醒日期归档，没有提醒的便签按创建日期归档</span>
+        </div>
+        <div class="weekday-row" aria-hidden="true">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div id="calendarGrid" class="calendar-grid" aria-label="月历"></div>
+      </section>
+    </main>
+    <script src="./calendar.js"></script>
+  </body>
+</html>
