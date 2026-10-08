@@ -27,6 +27,9 @@
     },
     "files": [
       "index.html",
+      "calendar.html",
+      "calendar.css",
+      "calendar.js",
       "styles.css",
       "app.js",
       "main.js",
