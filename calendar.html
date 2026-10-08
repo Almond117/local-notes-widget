@@ -8,6 +8,23 @@
   </head>
   <body>
     <main class="calendar-window">
+      <aside class="calendar-sidebar">
+        <div class="brand-mark">▣</div>
+        <h1>每日计划</h1>
+        <nav class="calendar-nav">
+          <button class="nav-item" type="button">⌂ <span>今天</span></button>
+          <button class="nav-item active" type="button">▦ <span>日历</span></button>
+          <button class="nav-item" type="button">☑ <span>任务</span></button>
+        </nav>
+        <div class="direction-title">方向</div>
+        <div class="direction-list">
+          <button class="direction-filter active" type="button" data-direction="all"><i></i>全部</button>
+          <button class="direction-filter" type="button" data-direction="工作"><i></i>工作</button>
+          <button class="direction-filter" type="button" data-direction="创业"><i></i>创业</button>
+          <button class="direction-filter" type="button" data-direction="学习"><i></i>学习</button>
+        </div>
+      </aside>
+      <section class="calendar-main">
       <header class="calendar-header">
         <div class="calendar-drag-region"></div>
         <span class="calendar-mark">▦</span>
@@ -28,7 +45,7 @@
         <div class="weekday-row" aria-hidden="true">
           <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
         </div>
-        <div id="calendarGrid" class="calendar-grid" aria-label="月历"></div>
+        <div class="calendar-grid" aria-label="月历"><div id="calendarGrid" class="calendar-grid-inner"></div></div>
         <section id="dayDetail" class="day-detail" hidden>
           <div class="detail-heading">
             <div>
@@ -40,11 +57,22 @@
           <div id="detailTasks" class="detail-tasks"></div>
           <form id="detailForm" class="detail-form">
             <input id="detailInput" type="text" maxlength="120" placeholder="添加当天要做的事…" autocomplete="off" />
+            <select id="detailDirection" aria-label="事项方向"><option value="工作">工作</option><option value="创业">创业</option><option value="学习">学习</option></select>
             <button type="submit" data-completed="false">待完成</button>
             <button type="submit" data-completed="true" class="completed-action">已完成</button>
           </form>
         </section>
+        </section>
       </section>
+      <aside class="today-panel">
+        <div class="today-panel-heading"><h2>今天要做</h2><button id="todayAddButton" type="button">＋</button></div>
+        <div id="todayDate" class="today-date"></div>
+        <div class="progress-track"><span id="todayProgress"></span></div>
+        <div id="todayTasks" class="today-tasks"></div>
+        <div class="panel-divider"></div>
+        <h2>方向概览</h2>
+        <div id="directionSummary" class="direction-summary"></div>
+      </aside>
     </main>
     <script src="./calendar.js"></script>
   </body>
