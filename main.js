@@ -5,6 +5,7 @@ const path = require("node:path");
 const DATA_FILE = "notes-data.json";
 const SETTINGS_FILE = "window-settings.json";
 let mainWindow = null;
+let calendarWindow = null;
 let tray = null;
 let saveBoundsTimer = null;
 let isQuitting = false;
@@ -223,6 +224,40 @@ function createWindow() {
   mainWindow.webContents.on("will-navigate", (event) => event.preventDefault());
 }
 
+function createCalendarWindow() {
+  if (calendarWindow && !calendarWindow.isDestroyed()) {
+    calendarWindow.show();
+    calendarWindow.focus();
+    return;
+  }
+  const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const width = Math.max(640, Math.floor(display.workArea.width * 0.52));
+  const height = Math.max(520, Math.floor(display.workArea.height * 0.58));
+  calendarWindow = new BrowserWindow({
+    width,
+    height,
+    minWidth: 560,
+    minHeight: 460,
+    frame: false,
+    transparent: true,
+    backgroundColor: "#00000000",
+    resizable: true,
+    show: false,
+    parent: mainWindow || undefined,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+  calendarWindow.loadFile("calendar.html");
+  calendarWindow.once("ready-to-show", () => calendarWindow.show());
+  calendarWindow.on("closed", () => { calendarWindow = null; });
+  calendarWindow.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  calendarWindow.webContents.on("will-navigate", (event) => event.preventDefault());
+}
+
 ipcMain.handle("window:minimize", () => mainWindow?.minimize());
 ipcMain.handle("window:close", () => mainWindow?.hide());
 ipcMain.handle("app:quit", () => {
@@ -236,6 +271,14 @@ ipcMain.handle("window:toggle-pinned", () => {
   mainWindow.setAlwaysOnTop(pinned, "screen-saver");
   saveWindowSettings();
   return pinned;
+});
+ipcMain.handle("calendar:open", () => {
+  createCalendarWindow();
+  return true;
+});
+ipcMain.handle("calendar:close", () => {
+  if (calendarWindow && !calendarWindow.isDestroyed()) calendarWindow.close();
+  return true;
 });
 ipcMain.handle("app:get-auto-launch", () => isAutoLaunchEnabled());
 ipcMain.handle("app:toggle-auto-launch", () => setAutoLaunch(!isAutoLaunchEnabled()));
