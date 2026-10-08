@@ -72,22 +72,6 @@ function render() {
     selectedKey = `${monthPrefix}-${String(day).padStart(2, "0")}`;
     renderDetail();
   }));
-  renderTodayPanel();
-}
-
-function renderTodayPanel() {
-  const todayKey = dateKey(new Date());
-  const todayTasks = tasks.filter((task) => taskDate(task) === todayKey && matchesDirection(task));
-  document.querySelector("#todayDate").textContent = formatKey(todayKey);
-  const done = todayTasks.filter((task) => task.completedAt).length;
-  document.querySelector("#todayProgress").style.width = todayTasks.length ? `${Math.round(done / todayTasks.length * 100)}%` : "0%";
-  document.querySelector("#todayTasks").innerHTML = todayTasks.length ? todayTasks.map((task) => `<div class="today-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}"><span class="status">${task.completedAt ? "✓" : "□"}</span><span>${escapeHtml(task.title)}</span></div>`).join("") : `<div class="detail-empty">今天还没有安排</div>`;
-  const summary = document.querySelector("#directionSummary");
-  summary.innerHTML = ["工作", "创业", "学习"].map((direction) => {
-    const count = tasks.filter((task) => (task.direction || "工作") === direction && !task.completedAt && taskDate(task) === todayKey).length;
-    const color = categoryColor({ direction });
-    return `<div class="summary-row" style="--task-color:${color}"><span><i></i>${direction}</span><strong>${count}</strong></div>`;
-  }).join("");
 }
 
 function renderDetail() {
@@ -163,8 +147,3 @@ document.querySelectorAll(".direction-filter").forEach((button) => button.addEve
   render();
   if (!document.querySelector("#dayDetail").hidden) renderDetail();
 }));
-document.querySelector("#todayAddButton").addEventListener("click", () => {
-  selectedKey = dateKey(new Date());
-  renderDetail();
-  document.querySelector("#detailInput").focus();
-});
