@@ -42,7 +42,7 @@ function render() {
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   monthLabel.textContent = `${year}年 ${month + 1}月`;
-  document.querySelector("#sideDate").textContent = formatKey(selectedKey);
+  document.querySelector("#boardDate").textContent = formatKey(selectedKey);
   const first = new Date(year, month, 1);
   const days = new Date(year, month + 1, 0).getDate();
   const leading = first.getDay();
@@ -73,17 +73,21 @@ function render() {
     selectedKey = `${monthPrefix}-${String(day).padStart(2, "0")}`;
     renderDetail();
   }));
+  renderTaskBoard();
 }
 
 function renderDetail() {
   const detail = document.querySelector("#dayDetail");
-  const list = document.querySelector("#detailTasks");
-  const dayTasks = tasks.filter((task) => taskDate(task) === selectedKey && matchesDirection(task));
-  document.querySelector("#detailDate").textContent = formatKey(selectedKey);
-  document.querySelector("#sideDate").textContent = formatKey(selectedKey);
-  document.querySelector("#detailSummary").textContent = `${dayTasks.filter((task) => !task.completedAt).length} 项待完成 · ${dayTasks.filter((task) => task.completedAt).length} 项已完成`;
-  list.innerHTML = dayTasks.length ? dayTasks.map((task) => `<div class="detail-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}" data-detail-task-id="${escapeHtml(task.id)}"><button class="detail-check" type="button" data-detail-action="toggle" aria-label="${task.completedAt ? "恢复" : "完成"}">${task.completedAt ? "✓" : ""}</button><span class="detail-title" title="双击修改">${escapeHtml(task.title)}</span><button class="detail-edit" type="button" data-detail-action="edit" aria-label="编辑">✎</button><button class="detail-delete" type="button" data-detail-action="delete" aria-label="删除">×</button></div>`).join("") : `<div class="detail-empty">这一天还没有安排</div>`;
+  document.querySelector("#detailDate").textContent = `添加任务 · ${formatKey(selectedKey)}`;
   detail.hidden = false;
+  renderTaskBoard();
+}
+
+function renderTaskBoard() {
+  const dayTasks = tasks.filter((task) => taskDate(task) === selectedKey && matchesDirection(task));
+  document.querySelector("#boardDate").textContent = formatKey(selectedKey);
+  const list = document.querySelector("#boardTasks");
+  list.innerHTML = dayTasks.length ? dayTasks.map((task) => `<div class="detail-task${task.completedAt ? " completed" : ""}" style="--task-color:${categoryColor(task)}" data-detail-task-id="${escapeHtml(task.id)}"><button class="detail-check" type="button" data-detail-action="toggle" aria-label="${task.completedAt ? "恢复" : "完成"}">${task.completedAt ? "✓" : ""}</button><span class="detail-title" title="双击修改">${escapeHtml(task.title)}</span><button class="detail-edit" type="button" data-detail-action="edit" aria-label="编辑">✎</button><button class="detail-delete" type="button" data-detail-action="delete" aria-label="删除">×</button></div>`).join("") : `<div class="detail-empty">这一天还没有任务</div>`;
 }
 
 async function load() {
@@ -101,11 +105,7 @@ document.querySelector("#nextMonth").addEventListener("click", () => { cursor.se
 document.querySelector("#todayButton").addEventListener("click", () => { cursor = new Date(); render(); });
 document.querySelector("#closeCalendar").addEventListener("click", () => window.desktopAPI?.closeCalendar());
 document.querySelector("#closeDetail").addEventListener("click", () => { document.querySelector("#dayDetail").hidden = true; });
-document.querySelector("#sideAddButton").addEventListener("click", () => {
-  renderDetail();
-  document.querySelector("#detailInput").focus();
-});
-document.querySelector("#detailTasks").addEventListener("click", async (event) => {
+document.querySelector("#boardTasks").addEventListener("click", async (event) => {
   const row = event.target.closest("[data-detail-task-id]");
   const action = event.target.closest("[data-detail-action]")?.dataset.detailAction;
   if (!row || !action) return;
